@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flask-SSE Quickstart</title>
+</head>
+<body>
+  <h1>Flask-SSE Quickstart</h1>
+  <a href="/login">Login</a>
+  <h2>You've logged in as: {{session['username']}}</h2>
+  <p id="result"></p>
+  <h1>Contacts</h1>
+  <p>
+      <ol>
+          <li><a href="">felani</a></li>
+      </ol>
+  </p>
+  <script>
+    var source = new EventSource("{{ url_for('sse.stream') }}");
+    source.addEventListener('greeting', function(event) {
+        var data = JSON.parse(event.data);
+        // alert("The server says " + data.message);
+        document.getElementById("result").innerHTML += data.message + "<br>";
+    }, false);
+    source.addEventListener('new_user', function(event) {
+        var data = JSON.parse(event.data);
+        // alert("new user : " + data.message);
+        document.getElementById("result").innerHTML += data.message + "<br>";
+    }, false);
+    source.addEventListener('new_contact', function(event) {
+        var data = JSON.parse(event.data);
+        // alert(data.message);
+        document.getElementById("result").innerHTML += data.message + "<br>";
+    }, false);
+    source.addEventListener('error', function(event) {
+        // var data = JSON.parse(event.data);
+        // alert("log : " + event);
+        document.getElementById("result").innerHTML += data.message + "<br>";
+    }, false);
+  </script>
+    <script>
+    var source_uniq = new EventSource("{{ url_for('sse.stream', channel={{session['username']}} ) }}") ;
+    source_uniq.addEventListener('new_contact', function(event) {
+        var data = JSON.parse(event.data);
+        if(prompt(data.message+" requests to add you in his contacts, are you ok?")) {
+            var xhr = new XMLHttpRequest(); 
+            xhr.open('POST','/contact/approve/'+data.message); 
+            xhr.onload = function() { console.log("xhr sent"); }; 
+            xhr.send("text string");
+        }
+    },false);
+
+    </script>
+</body>
+</html>
